@@ -1,1 +1,1 @@
-Please copy your scripts into this directory.
+All scripts go into this directory.
