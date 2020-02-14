@@ -29,16 +29,19 @@ syntheticSnpFunction <- function(x){ # function that gives specific str dosages 
 }
 
 #SNP DATA
-snpData <- read.table("STR_D12S391_1000Genomes.vcf", header = TRUE, skip = 252, comment.char = "") #reads vcf file
+snpData <- read.table("~/Documents/GitHub/CODISMarkers-Xprssn/Data/STR_D12S391_1000Genomes.vcf", header = TRUE, skip = 252, comment.char = "") #reads vcf file
 #header is to make the first line the column names, skip = 252 to not read in metadata, comment.char turns off the read of comments
+#NOTE THAT IT'S NOT JUST SNP DATA HERE, INDELS ARE INCLUDED AS WELL.  A MORE CLEAR VARIABLE NAME MIGHT BE raw1000genomesData.  THEN YOU CAN JUST NOT MODIFY THAT AND YOU DON'T NEED THE ADDITIONAL VARIABLE BELOW
 rawSnpData <- snpData #save unedited SNP data  
 
 genotypes <- snpData[-c(1:9)] #getting only genotypes
 
 snpNames <- snpData[c(3)] #isolate snp names 
+#AGAIN, NOT ONLY SNPS
 syntheticSnpDf <- data.frame("Synthetic") #create synthetic df
 colnames(syntheticSnpDf)[1] <- "ID" #names column
-snpAndSynthetic <- rbind(syntheticSnpDf,snpNames) #binds snp names with synthetic snp
+snpAndSynthetic <- rbind(syntheticSnpDf,snpNames) #binds snp names with synthetic snp 
+#VARIABLE NAME SHOULD CONVEY THAT THESE ARE ONLY NAMES, NOT GENOTYPES (LIKE SNPandSyntheticNames) [ALSO, AGAIN, NOT ONLY SNPS]
 
 position <- snpData[c(2)] #isolate snp positions
 syntheticPosition <- data.frame(12449954) #creates synthetic position, at the lowest to make high cor obvious
@@ -47,14 +50,18 @@ positionAndSynthetic <- rbind(as.integer(syntheticPosition), position) #binds sn
 
 snpDataTranspose<- as.data.frame(t(genotypes)) #turn genotype data into a dataframe and transpose
 rowNames <- row.names(snpDataTranspose) #create "rowNames" variable
+#A MORE DESCRIPTIVE VARIABLE NAME WILL MAKE YOUR CODE MORE CLEAR.  WHAT ROW NAMES?  YOU COULD SAY sampleNames OR indivNames INSTEAD
 row.names(snpDataTranspose) <- NULL #make row names NULL
 snpDataFinal <- cbind(rowNames, snpDataTranspose) #combine the names and genotypes into one dataframe
+#I KNOW I'M HARPING ON VARIABLE NAMES, BUT I THINK BY NAMING THEM MORE CLEARLY, YOU'LL HAVE AN EVEN STRONGER HANDLE ON YOUR CODE.  FIRST THING, THEY'RE NOT ONLY SNPS.  SECOND, CALLING SOMETHING 'FINAL' IS DANGEROUS BECAUSE YOU OFTEN END UP MODIFYING IT AGAIN IN WAYS YOU DIDN'T ANTICIPATE.  TRY TO USE A MORE DESCRIPTIVE TERM FOR EXACTLY HOW YOU HAVE THE DATA SET UP IN THIS VARIABLE
 colnames(snpDataFinal)[1] <- "Sample ID" #rename "names" as "sample ID" leaving a data frame of
 #the names of all individuals and their genotypes
 
 #STR DOSAGES DATA
 library(readr)
-strDosageRaw <- read_table2("D12S391_dose_exp.txt") #import updated average STR dosage data
+strDosageRaw <- read_table2("~/Documents/GitHub/CODISMarkers-Xprssn/Data/D12S391_dose_exp.txt") #import updated average STR dosage data
+#strDosageRaw <- read.table("~/Documents/GitHub/CODISMarkers-Xprssn/Data/D12S391_dose_exp.txt", header=TRUE, row.names=1) #import updated average STR dosage data
+#USING THE VERY SIMILAR FUNCTION READ.TABLE, YOU CAN ACCOUNT FOR BOTH ROW AND COLUMN NAMES, SO YOU DON'T GET THAT WARNING AND PROPERLY READ IN THE WHOLE FILE.  I'LL COMMENT OUT MY VERSION FOR NOW SINCE YOUR CODE DEPENDS ON GETTING IT THE WAY YOU DO
 
 strDosage <- strDosageRaw[c(1:2)] #remove gene expression
 
@@ -65,6 +72,7 @@ colnames(strDosage)[1] <- "Sample ID" #rename first column
 colnames(strDosage)[2] <- "STR Dosage" ##rename second column
 
 bind <- cbind(strDosage, SyntheticDosageNumbers)
+#MORE DESCRIPTIVE/SPECIFIC VARIABLE NAME
 
 plot(SyntheticDosageNumbers$Synthetic, bind$`STR Dosage`) #plot against each other to see if they are EXACTLY correlated
 sum(is.na(SyntheticDosageNumbers)) #count the total number of NAs; total = 0
@@ -79,9 +87,11 @@ strSnpCombined <- merge(bind, snpDataFinal, by = "Sample ID") #combine genotypes
 #and disregarding nonmatches
 
 oldData <- read.table("D12S391_100kb.vcf", header = FALSE) #get STR data from old data 
+#WHAT OLD DATA?  MORE SPECIFIC NAMING
 strPosition <- subset(oldData, V3 == "D12S391") #subset STR data to find the position of the STR; == 12449954
 
 strSnpCombinedMRaw <- as.matrix(strSnpCombined) #transforming combo into matrix 
+#TRANSFORMING YOUR DATA BETWEEN DATAFRAMES AND MATRICES GIVES YOU A LOT OF SIMILAR, BUT DISTINCT VARIABLES.  MIGHT BE USEFUL TO REDUCE THE NUMBER OF DATA TYPE CONVERSIONS IF POSSIBLE
 strSnpCombinedM <- strSnpCombinedMRaw #assigning new matrix so that old data can be checked if needed
 
 #applying the function to the new matrix to convert gentotypes into values
@@ -94,6 +104,7 @@ for (i in 1:nrow(strSnpCombinedM)){
 strSnpCombinedDf<-as.data.frame(strSnpCombinedM) #putting  transformed matrix into new dataframe
 str(strSnpCombinedDf) #check structure of data
 DosageAndGenotypes<- strSnpCombinedDf[-c(1)] #remove the sample IDs
+#DO YOU REALLY NEED TO CREATE A NEW VARIABLE WITHOUT THE SAMPLE NAMES?  COULD YOU JUST PUT IN strSnpCombinedDf[-c(1)] INSTEAD OF DosageAndGenotypes?  ASKING BECAUSE REDUCING THE NUMBER OF SIMILAR, BUT SLIGHTLY DISTINCT, VARIABLES WILL CLARIFY YOUR CODE
 str(DosageAndGenotypes) #check structure of data
 
 
@@ -109,7 +120,8 @@ cors <- rep(NA, 20156) #setting an empty list to put calculated correlation late
 for (i in 2:20157){
   cors[i-1]<- cor(DosageAndGenotypes[,1],DosageAndGenotypes[,i])
 }
-correlation <- cors #turn cors into a variable
+correlation <- cors #turn cors into a variable 
+#CORS IS ALREADY A VARIABLE
 
 cor(DosageAndGenotypes[,1],DosageAndGenotypes[,2])
 cor(DosageAndGenotypes[,1],DosageAndGenotypes[,20157])
@@ -118,6 +130,8 @@ cor(DosageAndGenotypes[,1],DosageAndGenotypes[,10522])
 #creating the new dataframe with first row as SNP name
 finalCorRaw <- cbind(positionAndSynthetic, snpAndSynthetic, correlation) #combine the position of the SNP, name of SNP, 
 #and it's correlation with the STR dosage into a single dataframe
+#POSITIONANDSYNTHETIC IS ACTUALLY THE POSITIONS INCLUDING SYNTHETIC, RIGHT?  SNPANDSYNTHETIC IS  THE BI-ALLELIC VARIANT _NAMES_ INLUDING SYNTHETIC, RIGHT?  MORE ACCURATE VARIABLE NAMES WILL HELP MAKE IT EASIER TO UNDERSTAND WHAT'S BEING ACCOMPLISHED IN THIS LINE.  I'D ALSO RECONSIDER THE NAMING OF THIS VARIABLE
+#IS IT AT ALL POSSIBLE THAT THE VARIANT ORDER ISN'T THE SAME BETWEEN POSITIONANDSYNTHETIC, SNPANDSYNTHETIC, AND CORRELATION?  I DON'T THINK SO, BUT THE BOOK-KEEPING MAKES IT A BIG OPAQUE
 
 sum(is.na(finalCorRaw$correlation)) #count the total number of NAs; total = 7509 
 finalCor <- na.omit(finalCorRaw)
