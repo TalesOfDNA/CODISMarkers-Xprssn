@@ -1,0 +1,302 @@
+---
+title: "R - Meta Analysis Effect Sizes and Forest Plot"
+output: html_notebook
+---
+
+Meta Analysis 
+
+*Installing packages*
+
+install.packages("tidyverse")
+install.packages("meta")
+# To install the 'metaforest' package, we use the development version,
+# which contains some functions for this course.
+# First, install the 'devtools' package, which allows you to install packages
+# directly from github
+install.packages("devtools")
+# Load the devtools package
+library(devtools)
+# Install metaforest from github:
+install_github("cjvanlissa/metaforest")
+
+```{r}
+library(devtools)
+
+# Define colummns
+populations = c("CEU", "FIN", "GBR", "TSI", "YRI")
+n = c(65, 81, 73, 83, 70)
+r = c(-0.0623108, 0.2248174, -0.2390426,-0.1110095,-0.02875677)
+
+# Create Dataframe
+CSF1PO = data.frame(populations, n, r)
+
+# Z-fisher transform correlation
+r_to_z <- function(r){.5 * log((1+r)/(1-r))}
+CSF1PO$z <- r_to_z(CSF1PO$r)
+
+# Create function v_z, which takes n as input:
+v_z <- function(n){1/(n-3)}
+
+# Apply the function to compute new column:
+CSF1PO$v <- v_z(CSF1PO$n)
+CSF1PO
+
+```
+
+```{r}
+library(metaforest)
+```
+
+```{r}
+m = rma(yi = CSF1PO$z, vi = CSF1PO$v, studlab=paste(CSF1PO$populations, CSF1PO$n), method='FE')
+m
+
+forest(m, slab = CSF1PO$populations, addcred = TRUE)
+
+``` 
+
+```{r}
+
+m = rma(yi = z, vi = v, data=CSF1PO, method='REML', slab=CSF1PO$populations)
+
+forest(m,
+   xlab="Correlation coefficient",#at=log(c(.05, .25)),
+    #atransf=exp, #xlim=c(-16,6),
+   ilab=cbind(CSF1PO$n),ilab.xpos=c(-.8),
+       cex=1.2, header="Subpopulation", mlab=""
+)
+
+op <- par(cex=1.2, font=2)
+text(c(-.8), m$k+2, c("n"))
+par(op)
+
+op <- par(cex=1.6, font=2)
+my_title <- expression(paste("CSF1PO - ", italic("CSF1R")))
+text(c(0), m$k+3, my_title)
+par(op)
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+#text(-.3, -.4, pos=2, cex=0.9, bquote(paste("Model (Q = ",
+#     .(formatC(m$QE, digits=2, format="f")), ", df = ", .(m$k - m$p),
+#     ", p = ", .(formatC(m$QEp, digits=2, format="f")), "; ", I^2, " = ",
+#     .(formatC(m$I2, digits=1, format="f")), "%)")))
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+text(-.8, -.45, pos=2, cex=0.9, bquote(paste("RE Model (", I^2, " = ",
+     .(formatC(m$I2, digits=1, format="f")), "%)")))
+```
+
+FIN AND GBR show significant associations (confidence intervals do not overlap with 0)
+**Interpreting I 2** Higgins et al. (2003) suggest:
+
+ I 2 = 0%  no heterogeneity,
+ I 2 = 25%  low heterogeneity,
+ I 2 = 50%  moderate heterogeneity,
+ I 2 = 75%  high heterogeneity.
+ 
+High heterogeneity suggests subgroups have a different true effect.
+
+```{r}
+# CSF1PO- TIGD6
+
+r = c(-0.0361541, -0.07538703, -0.1743143, -0.07425667, -0.07417294)
+
+# Create Dataframe
+CSF1PO = data.frame(populations, n, r)
+
+# Z-fisher transform correlation
+r_to_z <- function(r){.5 * log((1+r)/(1-r))}
+CSF1PO$z <- r_to_z(CSF1PO$r)
+
+# Create function v_z, which takes n as input:
+v_z <- function(n){1/(n-3)}
+
+# Apply the function to compute new column:
+CSF1PO$v <- v_z(CSF1PO$n)
+
+m = rma(yi = z, vi = v, data=CSF1PO, method='REML', slab=CSF1PO$populations)
+
+forest(m,
+   xlab="Correlation coefficient",#at=log(c(.05, .25)),
+    #atransf=exp, #xlim=c(-16,6),
+   ilab=cbind(CSF1PO$n),ilab.xpos=c(-.55),
+       cex=1.2, header="Subpopulation", mlab=""
+)
+
+op <- par(cex=1.2, font=2)
+text(c(-.55), m$k+2, c("n"))
+par(op)
+
+op <- par(cex=1.6, font=2)
+my_title <- expression(paste("CSF1PO - ", italic("TIGD6")))
+text(c(0), m$k+3, my_title)
+par(op)
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+text(-.6, -.45, pos=2, cex=0.9, bquote(paste("RE Model (", I^2, " = ",
+     .(formatC(m$I2, digits=1, format="f")), "%)")))
+```
+```{r}
+# D2S441- C1D
+
+r = c(0.1177671, 0.02427562, 0.1890354, 0.1302509, 0.1840611)
+
+# Create Dataframe
+D2S441 = data.frame(populations, n, r)
+
+# Z-fisher transform correlation
+r_to_z <- function(r){.5 * log((1+r)/(1-r))}
+D2S441$z <- r_to_z(D2S441$r)
+
+# Create function v_z, which takes n as input:
+v_z <- function(n){1/(n-3)}
+
+# Apply the function to compute new column:
+D2S441$v <- v_z(D2S441$n)
+m = rma(yi = z, vi = v, data=D2S441, method='REML', slab=D2S441$populations)
+
+forest(m,
+   xlab="Correlation coefficient",#at=log(c(.05, .25)),
+    #atransf=exp, #xlim=c(-16,6),
+   ilab=cbind(D2S441$n),ilab.xpos=c(-.4),
+       cex=1.2, header="Subpopulation", mlab=""
+)
+
+op <- par(cex=1.2, font=2)
+text(c(-.4), m$k+2, c("n"))
+par(op)
+
+op <- par(cex=1.6, font=2)
+my_title <- expression(paste("D2S441 - ", italic("C1D")))
+text(c(0), m$k+3, my_title)
+par(op)
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+text(-.4, -.45, pos=2, cex=0.9, bquote(paste("RE Model (", I^2, " = ",
+     .(formatC(m$I2, digits=1, format="f")), "%)")))
+```
+
+
+```{r}
+# D3S1358- LARS2
+
+r = c(-0.1070793, -0.3506373, -0.2629381, -0.3034246, -0.1347803)
+
+# Create Dataframe
+D3S1358 = data.frame(populations, n, r)
+
+# Z-fisher transform correlation
+r_to_z <- function(r){.5 * log((1+r)/(1-r))}
+D3S1358$z <- r_to_z(D3S1358$r)
+
+# Create function v_z, which takes n as input:
+v_z <- function(n){1/(n-3)}
+
+# Apply the function to compute new column:
+D3S1358$v <- v_z(D3S1358$n)
+
+m = rma(yi = z, vi = v, data=D3S1358, method='REML', slab=D3S1358$populations)
+
+forest(m,
+   xlab="Correlation coefficient",#at=log(c(.05, .25)),
+    #atransf=exp, #xlim=c(-16,6),
+   ilab=cbind(D3S1358$n),ilab.xpos=c(-.8),
+       cex=1.2, header="Subpopulation", mlab=""
+)
+
+op <- par(cex=1.2, font=2)
+text(c(-.8), m$k+2, c("n"))
+par(op)
+
+op <- par(cex=1.6, font=2)
+my_title <- expression(paste("D3S1358 - ", italic("LARS2")))
+text(c(0), m$k+3, my_title)
+par(op)
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+text(-.9, -.45, pos=2, cex=0.9, bquote(paste("RE Model (", I^2, " = ",
+     .(formatC(m$I2, digits=1, format="f")), "%)")))
+```
+
+
+
+```{r}
+# D18S51- KDSR
+
+r = c(0.1604313, 0.04305598, -0.02280598, 0.1064007, 0.3522365)
+
+# Create Dataframe
+D18S51 = data.frame(populations, n, r)
+
+# Z-fisher transform correlation
+r_to_z <- function(r){.5 * log((1+r)/(1-r))}
+D18S51$z <- r_to_z(D18S51$r)
+
+# Create function v_z, which takes n as input:
+v_z <- function(n){1/(n-3)}
+
+# Apply the function to compute new column:
+D18S51$v <- v_z(D18S51$n)
+m = rma(yi = z, vi = v, data=D18S51, method='REML', slab=D18S51$populations)
+
+forest(m,
+   xlab="Correlation coefficient",#at=log(c(.05, .25)),
+    #atransf=exp, #xlim=c(-16,6),
+   ilab=cbind(D18S51$n),ilab.xpos=c(-.45),
+       cex=1.2, header="Subpopulation", mlab=""
+)
+
+op <- par(cex=1.2, font=2)
+text(c(-.45), m$k+2, c("n"))
+par(op)
+
+op <- par(cex=1.6, font=2)
+my_title <- expression(paste("D18S51 - ", italic("KDSR")))
+text(c(0), m$k+3, my_title)
+par(op)
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+text(-.5, -.45, pos=2, cex=0.9, bquote(paste("RE Model (", I^2, " = ",
+     .(formatC(m$I2, digits=1, format="f")), "%)")))
+```
+
+
+
+```{r}
+# FGA- PLRG1
+
+r = c(-0.09311311, -0.111173, -0.05036632, -0.1963792, -0.1999144)
+
+# Create Dataframe
+FGA = data.frame(populations, n, r)
+
+# Z-fisher transform correlation
+r_to_z <- function(r){.5 * log((1+r)/(1-r))}
+FGA$z <- r_to_z(FGA$r)
+
+# Create function v_z, which takes n as input:
+v_z <- function(n){1/(n-3)}
+
+# Apply the function to compute new column:
+FGA$v <- v_z(FGA$n)
+m = rma(yi = z, vi = v, data=FGA, method='REML', slab=FGA$populations)
+
+forest(m,
+   xlab="Correlation coefficient",
+   ilab=cbind(FGA$n),ilab.xpos=c(-.55),
+       cex=1.2, header="Subpopulation", mlab=""
+)
+
+op <- par(cex=1.2, font=2)
+text(c(-.55), m$k+2, c("n"))
+par(op)
+
+op <- par(cex=1.6, font=2)
+my_title <- expression(paste("FGA - ", italic("PLRG1")))
+text(c(0), m$k+3, my_title)
+par(op)
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+text(-.6, -.45, pos=2, cex=0.9, bquote(paste("RE Model (", I^2, " = ",
+     .(formatC(m$I2, digits=1, format="f")), "%)")))
+```
