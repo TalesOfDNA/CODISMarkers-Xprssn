@@ -1,7 +1,7 @@
 # CODISMarkers-Xprssn
 We analyze whether the length variation of the CODIS markers influence gene expression.
 
-A preprint of our manuscript is available on *MedRxiv* at: https://doi.org/10.1101/2021.07.20.21260897
+Our manuscript is now available on *PNAS* at: https://www.pnas.org/doi/epdf/10.1073/pnas.2121024119
 
 ### Associations between forensic loci and neighboring gene expression levels may compromise medical privacy
 
